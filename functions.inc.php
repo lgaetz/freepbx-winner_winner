@@ -52,21 +52,9 @@ function wwinner_get_config($engine) {
 	switch($engine) {
 		case "asterisk":
 			$config = wwinner_config();
-			$context = "app-wwinner-reset";
+			$context = "app-wwinner";
 			$exten = "s";
 
-			if ($config[0]['enable']=='CHECKED' && $config[0]['record']=='CHECKED')
-			{
-				$ext->splice($context, $exten, 4, new ext_gosub('1', 's', 'sub-record-check', 'rg,s,always'));
-				$ext->splice($context, $exten, 5, new ext_dial($config[0]['destination'],'60,rL,240000'));
-				$ext->splice($context, $exten, 6, new ext_hangup);
-			}
-			else if ($config[0]['enable']=='CHECKED')
-			{
-				$ext->splice($context, $exten, 4, new ext_dial($config[0]['destination'],'60,rL,240000'));
-				$ext->splice($context, $exten, 5, new ext_hangup);
-			}
-			
 		break;
 	}
 }
@@ -75,7 +63,7 @@ function wwinner_wwinner($c) {
 	global $ext;
 	global $asterisk_conf;
 	$config = wwinner_config();
-	$id = "app-wwinner-check"; // The context to be included
+	$id = "app-wwinner"; // The context to be included
 
 	$ext->addInclude('from-internal-additional', $id); // Add the include from from-internal
 	$ext->add($id, $c, '', new ext_setvar('foo', '${SET(GLOBAL(CONCOUNT)=${MATH(${CONCOUNT} + 1,i)})}'));
