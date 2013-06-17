@@ -17,6 +17,3 @@ switch ($action) {
 $html = load_view(dirname(__FILE__).'/views/main.tpl', $variables);
 echo $html;
 
-$astman->database_put('family','key','valuer');
-$out = $astman->database_get('family','key');
-//echo $out;

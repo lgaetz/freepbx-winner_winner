@@ -97,15 +97,14 @@ function wwinner_wwinner($c) {
 	$ext->add($id, $c, '', new ext_playback('goodbye'));
 	$ext->add($id, $c, '', new ext_macro('hangupcall'));
 	$ext->add($id, $c, 'reset', new ext_setvar('GLOBAL(CONCOUNT)', '0'));
-	$ext->add($id, $c, 'reset', new ext_setvar('GLOBAL(CONWIN)', '10'));
-	$ext->add($id, $c, 'reset', new ext_read('GLOBAL(CONWIN)', 'please-enter-the&count&number&of-calls'));
+	$ext->add($id, $c, '', new ext_setvar('GLOBAL(CONWIN)', '10'));
+	$ext->add($id, $c, '', new ext_read('GLOBAL(CONWIN)', 'please-enter-the&count&number&of-calls'));
 	$ext->add($id, $c, '', new ext_noop("WinnerWinner: Contest counter reset to ${CONCOUNT} winning number is set to ${CONWIN}"));
 	$ext->add($id, $c, '', new ext_playback('count&is-set-to'));
 	$ext->add($id, $c, '', new ext_saydigits('${CONWIN}'));
-
 	$ext->add($id, $c, '', new ext_playback('goodbye'));
 	$ext->add($id, $c, '', new ext_macro('hangupcall'));
-	
+
 
 }
 
