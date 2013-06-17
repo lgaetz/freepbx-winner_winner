@@ -1,0 +1,26 @@
+<module>
+	<rawname>wwinner</rawname>
+	<name>Winner Winner</name>
+	<version>0.0.1</version>
+	<candisable>yes</candisable>
+	<canuninstall>yes</canuninstall>
+	<changelog>
+		*0.0.1* Original Release (beta)
+	</changelog>
+	<description>
+		Module to set up radio call-in style contest where the nth caller wins.
+	</description>
+	<license>GNU GPL/2</license>
+	<info>http://github.com/POSSA/</info>
+	<publisher>http://github.com/POSSA/</publisher>
+	<menuitems>
+                <wwinner>Winner Winner</wwinner>
+	</menuitems>
+	<depends>
+		<module>core</module>
+		<version>ge2.2</version>
+		<engine>asterisk gt1.8</engine>
+    </depends>
+	<category>Other</category>
+</module>
+
