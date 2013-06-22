@@ -8,6 +8,8 @@ $table = "wwinner_config";
 // list of the columns to be included in the $table table.  Add/subtract values to this list and trigger a reinstall to alter the table
 // this table is used to store module config info
 $cols['id'] = "INT NOT NULL";
+
+// the following are placeholders until I determine what to collect from user
 $cols['waittime'] = "INT NOT NULL";
 $cols['retrytime'] = "INT NOT NULL";
 $cols['extensionlength'] = "INT NOT NULL";

@@ -1,26 +1,25 @@
-<?php /* $Id */
+<?php
 
 if (!defined('FREEPBX_IS_AUTH')) { die('No direct script access allowed'); }
-//This file is part of FreePBX.
-//
-//    This is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 2 of the License, or
-//    (at your option) any later version.
-//
-//    This module is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    see <http://www.gnu.org/licenses/>.
-//
+
+/*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
+    This is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This module is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    see <http://www.gnu.org/licenses/>.
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***/ 
 
 
-
-//  check for settings and return
+//  retrieve user settings and return
 function wwinner_config($id) {
-	$sql = "SELECT * FROM wwinner_config WHERE `id` = '".$id".'";
+	$sql = "SELECT * FROM wwinner_config WHERE `id` = '".$id."'";
 	$results = sql($sql,"getAll",DB_FETCHMODE_ASSOC);
 	return is_array($results)?$results:array();
 }
@@ -33,8 +32,6 @@ function wwinner_edit($id,$post){
 	$var2 = $db->escapeSimple($post['record']);
 	$var3 = $db->escapeSimple($post['destination']);
 
-
-
 	$results = sql("
 		UPDATE wwinner_config 
 		SET 
@@ -45,58 +42,76 @@ function wwinner_edit($id,$post){
 
 }
 
+// This generates the dialplan
 function wwinner_get_config($engine) {
-	// This generates the dialplan
 	global $ext;
 	global $asterisk_conf;
+	$modulename = "wwinner";
 	switch($engine) {
 		case "asterisk":
+		
+			if (is_array($featurelist = featurecodes_getModuleFeatures($modulename))) {
+				foreach($featurelist as $item) {
+					$featurename = $item['featurename'];
+					$fname = $modulename.'_'.$featurename;
+					if (function_exists($fname)) {
+						$fcc = new featurecode($modulename, $featurename);
+						$fc = $fcc->getCodeActive();
+						unset($fcc);
+						
+						if ($fc != '')
+							$fname($fc);
+					} else {
+						$ext->add('from-internal-additional', 'debug', '', new ext_noop($modulename.": No func $fname"));
+					}	
+				}
+			}
+		
 			$config = wwinner_config();
-			$context = "app-wwinner";
-			$exten = "s";
+			$id = "app-wwinner";
+			$c = "s";
+			
+			$ext->addInclude('from-internal-additional', $id); // Add the include from from-internal
+			$ext->add($id, $c, '', new ext_setvar('foo', '${SET(GLOBAL(CONCOUNT)=${MATH(${CONCOUNT} + 1,i)})}'));
+			$ext->add($id, $c, '', new ext_noop("WinnerWinner: Contest caller number \${foo} of \${CONWIN}"));
+			$ext->add($id, $c, '', new ext_wait('1'));
+			$ext->add($id, $c, '', new ext_gotoif('$["${foo}"="${CONWIN}"]', 'winner'));
+		//	$ext->add($id, $c, '', new ext_gotoif('$["${foo}">"${CONWIN}"]', 'done'));
+			$ext->add($id, $c, '', new ext_playback('im-sorry&you-are-caller-num'));
+			$ext->add($id, $c, '', new ext_saynumber('${foo}'));
+		// redirect to user selected destination	
+			$ext->add($id, $c, '', new ext_playback('goodbye'));
+			$ext->add($id, $c, '', new ext_macro('hangupcall'));
+			$ext->add($id, $c, 'winner', new ext_macro('user-callerid'));
+			$ext->add($id, $c, '', new ext_noop("WinnerWinner: Caller \${AMPUSER} is a winner!"));
+			$ext->add($id, $c, '', new ext_playback('you-are-caller-num'));
+			$ext->add($id, $c, '', new ext_saydigits('${foo}'));
+			$ext->add($id, $c, '', new ext_playback('one-moment-please'));
+		// redirect to user selected destination
+			$ext->add($id, $c, '', new ext_playback('goodbye'));
+			$ext->add($id, $c, '', new ext_macro('hangupcall'));
 
 		break;
 	}
 }
 
-function wwinner_wwinner($c) {
+function wwinner_reset($c) {
 	global $ext;
 	global $asterisk_conf;
 	$config = wwinner_config();
-	$id = "app-wwinner"; // The context to be included
+	$id = "app-wwinner-reset"; // The context to be included
 
 	$ext->addInclude('from-internal-additional', $id); // Add the include from from-internal
-	$ext->add($id, $c, '', new ext_setvar('foo', '${SET(GLOBAL(CONCOUNT)=${MATH(${CONCOUNT} + 1,i)})}'));
-	$ext->add($id, $c, '', new ext_noop("WinnerWinner: Contest caller number ${foo} of ${CONWIN}"));
-	$ext->add($id, $c, '', new ext_wait('1'));
-	$ext->add($id, $c, '', new ext_gotoif('$["${foo}"="${CONWIN}"]', 'winner'));
-//	$ext->add($id, $c, '', new ext_gotoif('$["${foo}">"${CONWIN}"]', 'done'));
-	$ext->add($id, $c, '', new ext_playback('im-sorry&you-are-caller-num'));
-	$ext->add($id, $c, '', new ext_saydigits('${foo}'));
-// redirect to user selected destination	
-	$ext->add($id, $c, '', new ext_playback('goodbye'));
-	$ext->add($id, $c, '', new ext_macro('hangupcall'));
-	$ext->add($id, $c, 'winner', new ext_macro('user-callerid'));
-	$ext->add($id, $c, '', new ext_noop("WinnerWinner: Caller ${AMPUSER} is a winner!"));
-	$ext->add($id, $c, '', new ext_playback('you-are-caller-num'));
-	$ext->add($id, $c, '', new ext_saydigits('${foo}'));
-	$ext->add($id, $c, '', new ext_playback('one-moment-please'));
-// redirect to user selected destination
-	$ext->add($id, $c, '', new ext_playback('goodbye'));
-	$ext->add($id, $c, '', new ext_macro('hangupcall'));
 	$ext->add($id, $c, 'reset', new ext_setvar('GLOBAL(CONCOUNT)', '0'));
 	$ext->add($id, $c, '', new ext_setvar('GLOBAL(CONWIN)', '10'));
-	$ext->add($id, $c, '', new ext_read('GLOBAL(CONWIN)', 'please-enter-the&count&number&of-calls'));
-	$ext->add($id, $c, '', new ext_noop("WinnerWinner: Contest counter reset to ${CONCOUNT} winning number is set to ${CONWIN}"));
+	$ext->add($id, $c, '', new ext_read('GLOBAL(CONWIN)', 'please-enter-the&count&then-press-pound'));
+	$ext->add($id, $c, '', new ext_noop("WinnerWinner: Contest counter reset to \${CONCOUNT} winning number is set to \${CONWIN}"));
 	$ext->add($id, $c, '', new ext_playback('count&is-set-to'));
-	$ext->add($id, $c, '', new ext_saydigits('${CONWIN}'));
+	$ext->add($id, $c, '', new ext_saynumber('${CONWIN}'));
 	$ext->add($id, $c, '', new ext_playback('goodbye'));
 	$ext->add($id, $c, '', new ext_macro('hangupcall'));
-
-
 }
 
-		
 function wwinner_vercheck() {
 	$newver = false;
 	
