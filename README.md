@@ -1,7 +1,7 @@
 freepbx-winner_winner
 =====================
 
-Partially finished FreePBX Module to set up radio call-in style contests, where caller number `X` 
+Partially finished FreePBX Module to set up radio call-in style contests, where caller number `X` wins.
 
 2013-06-17
 This module is completely non-functional at present. 
